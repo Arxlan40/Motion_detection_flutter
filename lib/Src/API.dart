@@ -21,7 +21,7 @@ class CallApi {
       var fullUrl = _url + apiUrl;
             print(fullUrl);
 
-      return await http.get(fullUrl);
+      return await http.get(Uri.parse(fullUrl));
     } catch (e) {
       Fluttertoast.showToast(timeInSecForIosWeb: 3, msg: "error");
     }

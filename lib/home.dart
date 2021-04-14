@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
-import 'package:flutter_incall/flutter_incall.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'dart:io';
 import 'package:hardware_buttons/hardware_buttons.dart' as HardwareButtons;
 
 import 'package:permission_handler/permission_handler.dart';
 import 'package:http/http.dart' as http;
+import 'package:webview_flutter_plus/webview_flutter_plus.dart';
 import 'dart:convert';
 
 import 'Src/API.dart';
@@ -39,20 +39,18 @@ class _WebViewWebPageState extends State<HomePage> {
 
   Future getData() async {
     final http.Response response = await CallApi().getData('data');
-    print(response.statusCode);
+   // print(response.statusCode);
     if (response.statusCode == 200) {
       var body = json.decode(response.body);
-      print(body);
+      //print(body);
       setState(() {
         phone = body['phone'];
       });
     }
   }
 
-  IncallManager incallManager = new IncallManager();
 
   _callNumber() async {
-    incallManager.setSpeakerphoneOn(true);
 
     String number = '+39$phone';
     print(number);
@@ -62,24 +60,17 @@ class _WebViewWebPageState extends State<HomePage> {
 
   bool sidebar = false;
 
-  final PermissionHandler _permissionHandler = PermissionHandler();
 
   Future<bool> _requestPermission() async {
-    var result = await _permissionHandler.requestPermissions([
-      PermissionGroup.microphone,
-      PermissionGroup.camera,
-      PermissionGroup.accessMediaLocation,
-      PermissionGroup.camera,
-    ]);
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.storage,
+      Permission.camera,
+      Permission.microphone,
+      Permission.phone,
+
+    ].request();
   }
 
-  Future<bool> requestPermission({Function onPermissionDenied}) async {
-    Future<bool> hasPermission(PermissionGroup permission) async {
-      var permissionStatus =
-          await _permissionHandler.checkPermissionStatus(permission);
-      return permissionStatus == PermissionStatus.granted;
-    }
-  }
 
   Future<bool> _onBack() async {
     bool goBack;
@@ -131,72 +122,92 @@ class _WebViewWebPageState extends State<HomePage> {
   double progress = 0;
   InAppWebViewController webView;
 
+  WebViewPlusController _controller;
+  double _height = 1000;
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: _onBack,
-      child: Scaffold(
-        resizeToAvoidBottomInset: false,
-        body: Container(
-            child: Column(
-                children: <Widget>[
-          (progress != 1.0)
-              ? Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: Colors.grey[200],
-                        valueColor:
-                            AlwaysStoppedAnimation<Color>(Colors.redAccent)),
-                    // Container(
-                    //        height: _height / 1.1365,
-                    //        width: _width,
-                    //        child:
-                    //            Center(child: Image.asset('assets/splash.png')))
-                  ],
-                )
-              : null, //
-          // Should be removed while showing
-          Expanded(
-            child: Container(
-              child: InAppWebView(
-                  initialUrl: URL,
-                  initialHeaders: {},
-                  initialOptions: InAppWebViewGroupOptions(
-                    crossPlatform: InAppWebViewOptions(
-                      mediaPlaybackRequiresUserGesture: false,
-                      debuggingEnabled: true,
+      child: SafeArea(
+        child: Scaffold(
+         // resizeToAvoidBottomInset: false,
+          body:
+         // WebViewPlus(
+         //    initialUrl: 'assets/index.html',
+         //    onWebViewCreated: (controller) {
+         //      this._controller = controller;
+         //    },
+         //    onPageFinished: (url) {
+         //      _controller.getHeight().then((double height) {
+         //        print("Height: " + height.toString());
+         //        setState(() {
+         //          _height = height;
+         //        });
+         //      });
+         //    },
+         //    javascriptMode: JavascriptMode.unrestricted,
+         //  ),
+          Container(
+
+              child: Column(
+                  children: <Widget>[
+            (progress != 1.0)
+                ? Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.grey[200],
+                          valueColor:
+                              AlwaysStoppedAnimation<Color>(Colors.redAccent)),
+                      // Container(
+                      //        height: _height / 1.1365,
+                      //        width: _width,
+                      //        child:
+                      //            Center(child: Image.asset('assets/splash.png')))
+                    ],
+                  )
+                : null, //
+            // Should be removed while showing
+            Expanded(
+              child: Container(
+                child: InAppWebView(
+                    initialUrlRequest: URLRequest(
+                        url: Uri.parse("http://localhost:8080/assets/index.html")
                     ),
-                  ),
-                  onWebViewCreated: (InAppWebViewController controller) {
-                    webView = controller;
-                  },
-                  onLoadStart:
-                      (InAppWebViewController controller, String url) {},
-                  onLoadStop:
-                      (InAppWebViewController controller, String url) async {
-                    setState(() {
-                      sidebar = true;
-                    });
-                  },
-                  onProgressChanged:
-                      (InAppWebViewController controller, int progress) {
-                    setState(() {
-                      this.progress = progress / 100;
-                    });
-                  },
-                  androidOnPermissionRequest:
-                      (InAppWebViewController controller, String origin,
-                          List<String> resources) async {
-                    return PermissionRequestResponse(
-                        resources: resources,
-                        action: PermissionRequestResponseAction.GRANT);
-                  }),
-            ),
-          )
-        ].where((Object o) => o != null).toList())),
+                    initialOptions: InAppWebViewGroupOptions(
+                      crossPlatform: InAppWebViewOptions(
+                        javaScriptEnabled: true,
+                        useShouldOverrideUrlLoading: true,
+
+                        mediaPlaybackRequiresUserGesture: false,
+                      ),
+                      android: AndroidInAppWebViewOptions(
+                        useHybridComposition: true,
+                      ),
+                    ),
+                    onWebViewCreated: (InAppWebViewController controller) {
+                      webView = controller;
+                    },
+
+                    androidOnPermissionRequest: (controller, origin, resources) async {
+                      return PermissionRequestResponse(
+                          resources: resources,
+                          action: PermissionRequestResponseAction.GRANT);
+                    },
+                    onProgressChanged:
+                        (InAppWebViewController controller, int progress) {
+                      setState(() {
+                        this.progress = progress / 100;
+                      });
+                    },
+
+              ),
+            ))
+          ].where((Object o) => o != null).toList())),
+        ),
       ),
     ); //Remove null widgets
   }

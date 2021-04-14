@@ -27,15 +27,14 @@ dependencies:
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  flutter_inappwebview: ^4.0.0+4
-  permission_handler: ^4.2.0+hotfix.3
+  flutter_inappwebview: ^5.3.2
+  permission_handler: ^6.1.1
   hardware_buttons: ^1.0.0
   flutter_phone_direct_caller: ^2.0.0
-  flutter_incall: ^1.0.0
   wakelock: ^0.5.0+2
-  http: ^0.12.1
+  http: ^0.13.1
   fluttertoast: ^7.0.2
-
+  webview_flutter_plus: ^0.2.0
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -54,6 +53,7 @@ flutter:
   # To add assets to your application, add an assets section, like this:
   assets:
     - assets/splash.png
+    - assets/
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware.
 
