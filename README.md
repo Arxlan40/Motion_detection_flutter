@@ -1,4 +1,4 @@
-# clycou
+# Motion Detecting Application in Flutter Using Webview and JavaScript
 
 A new Flutter application.
 
